@@ -40,7 +40,9 @@ fn main() {
 	println!("create sciter instance");
 	sciter::set_options(sciter::RuntimeOptions::UxTheming(true)).unwrap();
 	sciter::set_options(sciter::RuntimeOptions::DebugMode(true)).unwrap();
-	sciter::set_options(sciter::RuntimeOptions::ScriptFeatures(0xFF)).unwrap();
+	sciter::set_options(sciter::RuntimeOptions::ScriptFeatures(
+		unsafe { sciter::SCRIPT_RUNTIME_FEATURES::from_bits_unchecked(0xFF) }
+	)).unwrap();
 
 	// create an engine instance with an opaque pointer as an identifier
 	use sciter::windowless::{Message, handle_message};

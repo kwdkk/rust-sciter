@@ -39,7 +39,8 @@ use std::rc::Rc;
 /// `SCITER_CREATE_WINDOW_FLAGS` alias.
 pub type Flags = SCITER_CREATE_WINDOW_FLAGS;
 
-pub use capi::scdef::{SCITER_CREATE_WINDOW_FLAGS};
+pub use capi::scdef::SCITER_CREATE_WINDOW_FLAGS;
+pub use crate::SCRIPT_RUNTIME_FEATURES;
 
 
 /// Per-window Sciter engine options.
@@ -61,14 +62,14 @@ pub enum Options {
 	TransparentWindow(bool),
 
 	/// Transparent windows support. When enabled, window uses per pixel alpha
-  /// (e.g. [`WS_EX_LAYERED`](https://msdn.microsoft.com/en-us/library/ms997507.aspx?f=255&MSPPError=-2147217396) window).
+	/// (e.g. [`WS_EX_LAYERED`](https://msdn.microsoft.com/en-us/library/ms997507.aspx?f=255&MSPPError=-2147217396) window).
 	AlphaWindow(bool),
 
-  /// global or per-window; enables Sciter Inspector for this window, must be called before loading HTML.
-  DebugMode(bool),
+	/// global or per-window; enables Sciter Inspector for all windows, must be called before loading HTML.
+	DebugMode(bool),
 
-  /// global or per-window; value: combination of [`SCRIPT_RUNTIME_FEATURES`](../enum.SCRIPT_RUNTIME_FEATURES.html) flags.
-	ScriptFeatures(u8),
+	/// global or per-window; value: combination of [`SCRIPT_RUNTIME_FEATURES`](../enum.SCRIPT_RUNTIME_FEATURES.html) flags.
+	ScriptFeatures(SCRIPT_RUNTIME_FEATURES),
 
 	/// Window is main, will destroy all other dependent windows on close, since 4.3.0.12
 	MainWindow(bool),
@@ -330,7 +331,7 @@ impl Window {
 			AlphaWindow(enable) => (SCITER_ALPHA_WINDOW, enable as usize),
 			MainWindow(enable) => (SCITER_SET_MAIN_WINDOW, enable as usize),
 			DebugMode(enable) => (SCITER_SET_DEBUG_MODE, enable as usize),
-			ScriptFeatures(mask) => (SCITER_SET_SCRIPT_RUNTIME_FEATURES, mask as usize),
+			ScriptFeatures(mask) => (SCITER_SET_SCRIPT_RUNTIME_FEATURES, mask.bits() as usize),
 			LogicalPixel(enable) => (SCITER_SET_PX_AS_DIP, enable as usize),
 		};
 		let ok = (_API.SciterSetOption)(self.get_hwnd(), option, value);

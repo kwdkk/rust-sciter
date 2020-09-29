@@ -36,16 +36,16 @@ pub enum LOAD_RESULT {
   LOAD_MYSELF,
 }
 
-/// Script runtime options.
-#[repr(C)]
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub enum SCRIPT_RUNTIME_FEATURES
-{
-	ALLOW_FILE_IO = 0x1,
-	ALLOW_SOCKET_IO = 0x2,
-	ALLOW_EVAL = 0x4,
-	ALLOW_SYSINFO = 0x8,
+bitflags! {
+  /// Script runtime options.
+  #[allow(missing_docs)]
+  pub struct SCRIPT_RUNTIME_FEATURES : u8
+  {
+    const ALLOW_FILE_IO = 0x1;
+    const ALLOW_SOCKET_IO = 0x2;
+    const ALLOW_EVAL = 0x4;
+    const ALLOW_SYSINFO = 0x8;
+  }
 }
 
 /// Sciter graphics rendering backend.

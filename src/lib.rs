@@ -558,7 +558,7 @@ pub enum RuntimeOptions<'a> {
   ///
   /// Note that these features have been disabled by default
   /// since [4.2.5.0](https://rawgit.com/c-smile/sciter-sdk/7036a9c7912ac30d9f369d9abb87b278d2d54c6d/logfile.htm).
-  ScriptFeatures(u8),
+  ScriptFeatures(SCRIPT_RUNTIME_FEATURES),
 	/// global; value: milliseconds, connection timeout of http client.
 	ConnectionTimeout(u32),
 	/// global; value: `0` - drop connection, `1` - use builtin dialog, `2` - accept connection silently.
@@ -585,7 +585,7 @@ pub fn set_options(options: RuntimeOptions) -> std::result::Result<(), ()> {
 		OnHttpsError(behavior) => (SCITER_HTTPS_ERROR, behavior as usize),
 		// GpuBlacklist(json) => (SCITER_SET_GPU_BLACKLIST, json.as_bytes().as_ptr() as usize),
 		InitScript(script) => (SCITER_SET_INIT_SCRIPT, script.as_bytes().as_ptr() as usize),
-		ScriptFeatures(mask) => (SCITER_SET_SCRIPT_RUNTIME_FEATURES, mask as usize),
+		ScriptFeatures(mask) => (SCITER_SET_SCRIPT_RUNTIME_FEATURES, mask.bits() as usize),
 		GfxLayer(backend) => (SCITER_SET_GFX_LAYER, backend as usize),
 		DebugMode(enable) => (SCITER_SET_DEBUG_MODE, enable as usize),
 		UxTheming(enable) => (SCITER_SET_UX_THEMING, enable as usize),
