@@ -119,46 +119,38 @@ pub enum SCITER_RT_OPTIONS
 	SCITER_SET_PX_AS_DIP = 16,
 }
 
-/// Window flags
-#[repr(C)]
-pub enum SCITER_CREATE_WINDOW_FLAGS {
-	/// child window only, if this flag is set all other flags ignored.
-  SW_CHILD      = 1,
-  /// toplevel window, has titlebar.
-  SW_TITLEBAR   = 1 << 1,
-  /// has resizeable frame.
-  SW_RESIZEABLE = 1 << 2,
-  /// is tool window.
-  SW_TOOL       = 1 << 3,
-  /// has minimize / maximize buttons.
-  SW_CONTROLS   = 1 << 4,
-  /// glassy window - "Acrylic" on Windows and "Vibrant" on macOS.
-  SW_GLASSY     = 1 << 5,
-  /// transparent window (e.g. `WS_EX_LAYERED` on Windows, macOS is supported too).
-  SW_ALPHA      = 1 << 6,
-  /// main window of the app, will terminate the app on close.
-  SW_MAIN       = 1 << 7,
-  /// the window is created as topmost window.
-  SW_POPUP      = 1 << 8,
-  /// make this window inspector ready.
-  SW_ENABLE_DEBUG = 1 << 9,
-  /// it has its own script VM.
-  SW_OWNS_VM      = 1 << 10,
+bitflags! {
+  /// Window flags
+  pub struct SCITER_CREATE_WINDOW_FLAGS : u32 {
+    /// child window only, if this flag is set all other flags ignored.
+    const SW_CHILD      = 1;
+    /// toplevel window, has titlebar.
+    const SW_TITLEBAR   = (1 << 1);
+    /// has resizeable frame.
+    const SW_RESIZEABLE = (1 << 2);
+    /// is tool window.
+    const SW_TOOL       = (1 << 3);
+    /// has minimize / maximize buttons.
+    const SW_CONTROLS   = (1 << 4);
+    /// glassy window - "Acrylic" on Windows and "Vibrant" on macOS.
+    const SW_GLASSY     = (1 << 5);
+    /// transparent window (e.g. `WS_EX_LAYERED` on Windows, macOS is supported too).
+    const SW_ALPHA      = (1 << 6);
+    /// main window of the app, will terminate the app on close.
+    const SW_MAIN       = (1 << 7);
+    /// the window is created as topmost window.
+    const SW_POPUP      = (1 << 8);
+    /// make this window inspector ready.
+    const SW_ENABLE_DEBUG = (1 << 9);
+    /// it has its own script VM.
+    const SW_OWNS_VM      = (1 << 10);
+  }
 }
 
 impl Default for SCITER_CREATE_WINDOW_FLAGS {
 	fn default() -> Self {
 		SCITER_CREATE_WINDOW_FLAGS::SW_CHILD
 	}
-}
-
-/// Flags can be OR'ed as `SW_MAIN|SW_ALPHA`.
-impl ::std::ops::BitOr for SCITER_CREATE_WINDOW_FLAGS {
-  type Output = SCITER_CREATE_WINDOW_FLAGS;
-  fn bitor(self, rhs: Self::Output) -> Self::Output {
-    let rn = (self as UINT) | (rhs as UINT);
-    unsafe { ::std::mem::transmute(rn) }
-  }
 }
 
 #[repr(C)]

@@ -107,7 +107,7 @@ impl Window {
 		}
 
 		let mut base = OsWindow::new();
-		let hwnd = base.create(rect, flags as UINT, parent.unwrap_or(0 as HWINDOW));
+		let hwnd = base.create(rect, flags.bits(), parent.unwrap_or(0 as HWINDOW));
 		assert!(!hwnd.is_null());
 
 		let wnd = Window { base: base, host: Rc::new(Host::attach(hwnd))};
@@ -504,48 +504,44 @@ impl Builder {
 	}
 
 	/// Top level window, has titlebar.
-	pub fn with_title(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_TITLEBAR)
-	}
-
-	/// Can be resized.
-	pub fn resizeable(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_RESIZEABLE)
-	}
-
-	/// Can not be resized.
-	pub fn fixed(self) -> Self {
-		self.and(SCITER_CREATE_WINDOW_FLAGS::SW_RESIZEABLE)
-	}
-
-	/// Has minimize / maximize buttons.
-	pub fn closeable(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_CONTROLS)
-	}
-
-	/// Glassy window ("Acrylic" on Windows and "Vibrant" on macOS).
-	pub fn glassy(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_GLASSY)
-	}
-
-	/// Transparent window.
-	pub fn alpha(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_ALPHA)
-	}
-
-	/// Can be debugged with Inspector.
-	pub fn debug(self) -> Self {
-		self.or(SCITER_CREATE_WINDOW_FLAGS::SW_ENABLE_DEBUG)
-	}
-
-	fn or(mut self, flag: Flags) -> Self {
-		self.flags = self.flags | flag;
+	pub fn with_title(mut self) -> Self {
+        self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_TITLEBAR;
 		self
 	}
 
-	fn and(mut self, flag: Flags) -> Self {
-		let masked = self.flags as u32 & !(flag as u32);
-		self.flags = unsafe { ::std::mem::transmute(masked) };
+	/// Can be resized.
+	pub fn resizeable(mut self) -> Self {
+        self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_RESIZEABLE;
+		self
+	}
+
+	/// Can not be resized.
+	pub fn fixed(mut self) -> Self {
+        self.flags = self.flags & !SCITER_CREATE_WINDOW_FLAGS::SW_RESIZEABLE;
+        self
+	}
+
+	/// Has minimize / maximize buttons.
+	pub fn closeable(mut self) -> Self {
+        self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_CONTROLS;
+		self
+	}
+
+	/// Glassy window ("Acrylic" on Windows and "Vibrant" on macOS).
+	pub fn glassy(mut self) -> Self {
+        self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_GLASSY;
+		self
+	}
+
+	/// Transparent window.
+	pub fn alpha(mut self) -> Self {
+        self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_ALPHA;
+		self
+	}
+
+	/// Can be debugged with Inspector.
+	pub fn debug(mut self) -> Self {
+		self.flags = self.flags | SCITER_CREATE_WINDOW_FLAGS::SW_ENABLE_DEBUG;
 		self
 	}
 
