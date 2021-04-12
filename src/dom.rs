@@ -167,7 +167,7 @@ use capi::scdef::RESOURCE_TYPE;
 use capi::scbehavior::{CLICK_REASON, BEHAVIOR_EVENTS, BEHAVIOR_EVENT_PARAMS};
 use utf::{store_astr, store_wstr, store_bstr};
 
-pub use capi::scdom::{SCDOM_RESULT, HELEMENT, SET_ELEMENT_HTML, ELEMENT_AREAS, ELEMENT_STATE_BITS};
+pub use capi::scdom::{SCDOM_RESULT, HELEMENT, HNODE, SET_ELEMENT_HTML, ELEMENT_AREAS, ELEMENT_STATE_BITS, NODE_TYPE, NODE_INS_TARGET};
 pub use dom::event::{EventHandler, EventReason};
 
 
@@ -180,6 +180,10 @@ macro_rules! HELEMENT {
 	() => { ::std::ptr::null_mut() }
 }
 
+/// Initialize HNODE by nullptr.
+macro_rules! HNODE {
+	() => { ::std::ptr::null_mut() }
+}
 
 macro_rules! ok_or {
 	($rv:expr, $ok:ident) => {
@@ -1279,6 +1283,403 @@ impl<'a> ::std::iter::IntoIterator for &'a Element {
 	}
 }
 
+/// DOM node wrapper. See the module-level documentation also.
+#[derive(PartialEq)]
+pub struct Node {
+	hn: HNODE,
+}
+
+/// `sciter::Node` can be transferred across thread boundaries.
+unsafe impl Send for Node {}
+
+/// It is safe to share `sciter::Node` between threads - underlaying API is thread-safe.
+unsafe impl Sync for Node {}
+
+impl From<HNODE> for Node {
+	/// Construct an Node object from an `HNODE` handle.
+	fn from(hn: HNODE) -> Self {
+		Node { hn: Node::use_or(hn) }
+	}
+}
+
+/// Store the DOM node as a `Value`.
+///
+/// Since 4.4.3.26, perhaps.
+impl std::convert::TryFrom<Node> for Value {
+	type Error = SCDOM_RESULT;
+	fn try_from(e: Node) -> Result<Value> {
+		let mut v = Value::new();
+		let ok = if crate::api_version() >= DOM_UNWRAP_API_VERSION {
+			(_API.SciterNodeWrap)(v.as_mut_ptr(), e.as_ptr())
+		} else {
+			unimplemented!()
+		};
+		ok_or!(v, ok)
+	}
+}
+
+/// Get an `Node` object contained in the `Value`.
+impl crate::value::FromValue for Node {
+	fn from_value(v: &Value) -> Option<Node> {
+		if crate::api_version() >= DOM_UNWRAP_API_VERSION {
+			let mut h = std::ptr::null_mut();
+			let ok = (_API.SciterNodeUnwrap)(v.as_cptr(), &mut h);
+			if ok == SCDOM_RESULT::OK {
+				Some(Node::from(h))
+			} else {
+				None
+			}
+		} else {
+			let mut pv: LPCBYTE = std::ptr::null();
+			let mut cb: UINT = 0;
+			let ok = (_API.ValueBinaryData)(v.as_cptr(), &mut pv, &mut cb);
+			if ok == crate::value::VALUE_RESULT::OK {
+				Some(Node::from(pv as HNODE))
+			} else {
+				None
+			}
+		}
+	}
+}
+
+impl std::convert::TryFrom<&Element> for Node {
+	type Error = SCDOM_RESULT;
+	fn try_from(v: &Element) -> Result<Self> {
+		let mut e = Node { hn: HNODE!() };
+		let mut ok = (_API.SciterNodeCastFromElement)(v.as_ptr(), &mut e.hn);
+		if ok == SCDOM_RESULT::OK {
+			ok = (_API.SciterNodeAddRef)(e.hn);
+		}
+		ok_or!(e, ok)
+	}
+}
+
+impl std::convert::TryFrom<Element> for Node {
+	type Error = SCDOM_RESULT;
+	fn try_from(v: Element) -> Result<Self> {
+		Self::try_from(&v)
+	}
+}
+
+impl std::convert::TryFrom<&Node> for Element {
+	type Error = SCDOM_RESULT;
+	fn try_from(v: &Node) -> Result<Self> {
+		let mut e = Element { he: HELEMENT!() };
+		let mut ok = (_API.SciterNodeCastToElement)(v.as_ptr(), &mut e.he);
+		if ok == SCDOM_RESULT::OK {
+			ok = (_API.Sciter_UseElement)(e.he);
+		}
+		ok_or!(e, ok)
+	}
+}
+
+impl std::convert::TryFrom<Node> for Element {
+	type Error = SCDOM_RESULT;
+	fn try_from(v: Node) -> Result<Self> {
+		Self::try_from(&v)
+	}
+}
+
+impl Node {
+
+	//\name Creation
+
+	/// Create a new text node, it is disconnected initially from the DOM.
+	pub fn create_text_node(text: &str) -> Result<Node> {
+		let mut e = Node { hn: HNODE!() };
+		let (text, n) = s2wn!(text);
+		let ok = (_API.SciterCreateTextNode)(text.as_ptr(), n as UINT, &mut e.hn);
+		ok_or!(e, ok)
+	}
+
+	/// Create a new comment node, it is disconnected initially from the DOM.
+	pub fn create_comment_node(text: &str) -> Result<Node> {
+		let mut e = Node { hn: HNODE!() };
+		let (text, n) = s2wn!(text);
+		let ok = (_API.SciterCreateCommentNode)(text.as_ptr(), n as UINT, &mut e.hn);
+		ok_or!(e, ok)
+	}
+
+	#[doc(hidden)]
+	fn use_or(hn: HNODE) -> HNODE {
+		let ok = (_API.SciterNodeAddRef)(hn);
+		if ok == SCDOM_RESULT::OK {
+			hn
+		} else {
+			HNODE!()
+		}
+	}
+
+
+	//\name Common methods
+
+	/// Access node pointer.
+	pub fn as_ptr(&self) -> HNODE {
+		self.hn
+	}
+
+	/// Get node type
+	pub fn get_type(&self) -> NODE_TYPE {
+		let mut n = NODE_TYPE::NT_ELEMENT;
+		(_API.SciterNodeType)(self.hn, &mut n);
+		return n;
+	}
+
+	/// Get inner text of the node as string.
+	pub fn get_text(&self) -> String {
+		let mut s = String::new();
+		(_API.SciterNodeGetText)(self.hn, store_wstr, &mut s as *mut String as LPVOID);
+		return s;
+	}
+
+	/// Set inner text of the node.
+	pub fn set_text(&mut self, text: &str) -> Result<()> {
+		let (s,n) = s2wn!(text);
+		let ok = (_API.SciterNodeSetText)(self.hn, s.as_ptr(), n);
+		ok_or!((), ok)
+	}
+
+
+	//\name DOM tree access
+
+	/// Get parent element.
+	pub fn parent(&self) -> Option<Element> {
+		let mut p = HELEMENT!();
+		(_API.SciterNodeParent)(self.hn, &mut p);
+		if p.is_null() {
+			None
+		} else {
+			Some(Element::from(p))
+		}
+	}
+
+	/// Get next sibling element.
+	pub fn next_sibling(&self) -> Option<Node> {
+		let mut p = HNODE!();
+		(_API.SciterNodeNextSibling)(self.hn, &mut p);
+		if p.is_null() {
+			None
+		} else {
+			Some(Node::from(p))
+		}
+	}
+
+	/// Get previous sibling element.
+	pub fn prev_sibling(&self) -> Option<Node> {
+		let mut p = HNODE!();
+		(_API.SciterNodePrevSibling)(self.hn, &mut p);
+		if p.is_null() {
+			None
+		} else {
+			Some(Node::from(p))
+		}
+	}
+
+	/// Get first child node.
+	pub fn first_child(&self) -> Option<Node> {
+		let mut p = HNODE!();
+		(_API.SciterNodeFirstChild)(self.hn, &mut p);
+		if p.is_null() {
+			None
+		} else {
+			Some(Node::from(p))
+		}
+	}
+
+	/// Get last child node.
+	pub fn last_child(&self) -> Option<Node> {
+		let mut p = HNODE!();
+		(_API.SciterNodeLastChild)(self.hn, &mut p);
+		if p.is_null() {
+			None
+		} else {
+			Some(Node::from(p))
+		}
+	}
+
+	/// Get node's child at specified index.
+	pub fn get(&self, index: usize) -> Option<Node> {
+		return self.child(index);
+	}
+
+	/// An iterator over the direct children of a DOM node.
+	pub fn children(&self) -> ChildNodes {
+		ChildNodes {
+			base: self,
+			index: 0,
+			count: self.children_count(),
+		}
+	}
+
+	/// Get element's child at specified index.
+	pub fn child(&self, index: usize) -> Option<Node> {
+		let mut p = HELEMENT!();
+		let ok = (_API.SciterNodeNthChild)(self.hn, index as UINT, &mut p);
+		match ok {
+			SCDOM_RESULT::OK => Some(Node::from(p)),
+			_ => None
+		}
+	}
+
+	/// Get number of child elements.
+	pub fn children_count(&self) -> usize {
+		let mut n = 0u32;
+		(_API.SciterNodeChildrenCount)(self.hn, &mut n as *mut UINT);
+		return n as usize;
+	}
+
+	/// Get number of child elements.
+	pub fn len(&self) -> usize {
+		return self.children_count();
+	}
+
+	/// Returns `true` is `self` has zero elements.
+	pub fn is_empty(&self) -> bool {
+		self.len() == 0
+	}
+
+	pub fn insert_before_self(&mut self, child: &Node) -> Result<()> {
+		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_BEFORE, child.hn);
+		ok_or!((), ok)
+	}
+
+	pub fn insert_after_self(&mut self, child: &Node) -> Result<()> {
+		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_AFTER, child.hn);
+		ok_or!((), ok)
+	}
+
+	/// Append element as last child of this element.
+	pub fn append(&mut self, child: &Node) -> Result<()> {
+		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_APPEND, child.hn);
+		ok_or!((), ok)
+	}
+
+	/// Prepend element as first child of this element.
+	pub fn prepend(&mut self, child: &Node) -> Result<()> {
+		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_PREPEND, child.hn);
+		ok_or!((), ok)
+	}
+
+	/// Take node out of its container (and DOM tree).
+	pub fn detach(&mut self) -> Result<()> {
+		let ok = (_API.SciterNodeRemove)(self.hn, 0);
+		ok_or!((), ok)
+	}
+
+	/// Take node out of its container (and DOM tree) and force destruction of all behaviors.
+	pub fn destroy(&mut self) -> Result<()> {
+		let mut p = HNODE!();
+		::std::mem::swap(&mut self.hn, &mut p);
+		let ok = (_API.SciterNodeRemove)(p, 1);
+		ok_or!((), ok)
+	}
+}
+
+/// Release element pointer.
+impl Drop for Node {
+	fn drop(&mut self) {
+		(_API.SciterNodeRelease)(self.hn);
+		self.hn = HELEMENT!();
+	}
+}
+
+/// Increment reference count of the dom element.
+impl Clone for Node {
+	fn clone(&self) -> Self {
+		Node::from(self.hn)
+	}
+}
+
+/// Human element representation.
+impl ::std::fmt::Display for Node {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+		use std::convert::TryFrom;
+		match self.get_type() {
+			NODE_TYPE::NT_ELEMENT => match Element::try_from(self) {
+				Ok(x) => <Element as ::std::fmt::Display>::fmt(&x, f),
+				Err(x) => write!(f, "< {:?} >", x),
+			},
+			NODE_TYPE::NT_TEXT => write!(f, "{:?}", self.get_text()),
+			NODE_TYPE::NT_COMMENT => write!(f, "<!-- {} -->", self.get_text()),
+		}
+	}
+}
+
+/// Machine-like element visualization (`{:?}` and `{:#?}`).
+impl ::std::fmt::Debug for Node {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+		use std::convert::TryFrom;
+		match self.get_type() {
+			NODE_TYPE::NT_ELEMENT => match Element::try_from(self) {
+				Ok(x) => <Element as ::std::fmt::Debug>::fmt(&x, f),
+				Err(x) => write!(f, "< {:?} >", x),
+			},
+			NODE_TYPE::NT_TEXT =>
+				f.debug_struct("Text")
+					.field("text", &self.get_text())
+					.finish(),
+			NODE_TYPE::NT_COMMENT =>
+				f.debug_struct("Comment")
+					.field("text", &self.get_text())
+					.finish(),
+		}
+	}
+}
+
+
+/// An iterator over the direct children of a DOM element.
+pub struct ChildNodes<'a> {
+	base: &'a Node,
+	index: usize,
+	count: usize,
+}
+
+/// Allows `for child in el.children() {}` enumeration.
+impl<'a> ::std::iter::Iterator for ChildNodes<'a> {
+	type Item = Node;
+
+	fn next(&mut self) -> Option<Node> {
+		if self.index < self.count {
+			let pos = self.index;
+			self.index += 1;
+			self.base.child(pos)
+		} else {
+			None
+		}
+	}
+
+	fn size_hint(&self) -> (usize, Option<usize>) {
+		let remain = self.count - self.index;
+		(remain, Some(remain))
+	}
+
+	fn count(self) -> usize {
+		self.count
+	}
+}
+
+impl<'a> ::std::iter::DoubleEndedIterator for ChildNodes<'a> {
+	fn next_back(&mut self) -> Option<Node> {
+		if self.index == self.count || self.count == 0 {
+			None
+		} else {
+			self.count -= 1;
+			self.base.child(self.count)
+		}
+	}
+}
+
+/// Allows `for child in &el {}` enumeration.
+impl<'a> ::std::iter::IntoIterator for &'a Node {
+	type Item = Node;
+	type IntoIter = ChildNodes<'a>;
+
+	fn into_iter(self) -> ChildNodes<'a> {
+		self.children()
+	}
+}
+
+
 
 /* Not implemented yet or not used APIs:
 
@@ -1307,25 +1708,6 @@ SciterShowPopup
 SciterShowPopupAt
 SciterSortElements
 SciterTraverseUIEvent
-
-SciterCreateCommentNode
-SciterCreateTextNode
-SciterNodeAddRef
-SciterNodeCastFromElement
-SciterNodeCastToElement
-SciterNodeChildrenCount
-SciterNodeFirstChild
-SciterNodeGetText
-SciterNodeInsert
-SciterNodeLastChild
-SciterNodeNextSibling
-SciterNodeNthChild
-SciterNodeParent
-SciterNodePrevSibling
-SciterNodeRelease
-SciterNodeRemove
-SciterNodeSetText
-SciterNodeType
 
 */
 

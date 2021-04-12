@@ -103,7 +103,7 @@ pub mod video;
 pub mod window;
 pub mod windowless;
 
-pub use dom::Element;
+pub use dom::{Element, Node};
 pub use dom::event::EventHandler;
 pub use host::{Archive, Host, HostHandler};
 pub use value::{Value, FromValue};

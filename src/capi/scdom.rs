@@ -48,6 +48,25 @@ pub enum SET_ELEMENT_HTML
 	SOH_INSERT_AFTER        = 5,
 }
 
+#[repr(C)]
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum NODE_TYPE
+{
+  NT_ELEMENT = 0,
+  NT_TEXT = 1,
+  NT_COMMENT = 2,
+}
+
+#[repr(C)]
+#[derive(Debug, PartialOrd, PartialEq)]
+pub enum NODE_INS_TARGET
+{
+  NIT_BEFORE = 0,
+  NIT_AFTER = 1,
+  NIT_APPEND = 2,
+  NIT_PREPEND = 3,
+}
+
 /// Bounding rectangle of the element.
 #[repr(C)]
 #[derive(Debug, PartialOrd, PartialEq)]
