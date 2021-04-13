@@ -67,55 +67,55 @@ pub enum NODE_INS_TARGET
   NIT_PREPEND = 3,
 }
 
-/// Bounding rectangle of the element.
-#[repr(C)]
-#[derive(Debug, PartialOrd, PartialEq)]
-pub enum ELEMENT_AREAS {
+bitflags! {
+	/// Bounding rectangle of the element.
+	pub struct ELEMENT_AREAS: u32 {
 
-	/// `or` this flag if you want to get Sciter window relative coordinates,
-	/// otherwise it will use nearest windowed container e.g. popup window.
-	ROOT_RELATIVE = 0x01,
+		/// `or` this flag if you want to get Sciter window relative coordinates,
+		/// otherwise it will use nearest windowed container e.g. popup window.
+		const ROOT_RELATIVE = 0x01;
 
-	/// `or` this flag if you want to get coordinates relative to the origin of element iself.
-	SELF_RELATIVE = 0x02,
+		/// `or` this flag if you want to get coordinates relative to the origin of element iself.
+		const SELF_RELATIVE = 0x02;
 
-	/// Position inside immediate container.
-	CONTAINER_RELATIVE = 0x03,
+		/// Position inside immediate container.
+		const CONTAINER_RELATIVE = 0x03;
 
-	/// Position relative to view - Sciter window.
-	VIEW_RELATIVE = 0x04,
+		/// Position relative to view - Sciter window.
+		const VIEW_RELATIVE = 0x04;
 
-	/// Content (inner)  box.
-	CONTENT_BOX = 0x00,
+		/// Content (inner)  box.
+		const CONTENT_BOX = 0x00;
 
-	/// Content + paddings.
-	PADDING_BOX = 0x10,
+		/// Content + paddings.
+		const PADDING_BOX = 0x10;
 
-	/// Content + paddings + border.
-	BORDER_BOX  = 0x20,
+		/// Content + paddings + border.
+		const BORDER_BOX  = 0x20;
 
-	/// Content + paddings + border + margins.
-	MARGIN_BOX  = 0x30,
+		/// Content + paddings + border + margins.
+		const MARGIN_BOX  = 0x30;
 
-	/// Relative to content origin - location of background image (if it set `no-repeat`).
-	BACK_IMAGE_AREA = 0x40,
+		/// Relative to content origin - location of background image (if it set `no-repeat`).
+		const BACK_IMAGE_AREA = 0x40;
 
-	/// Relative to content origin - location of foreground image (if it set `no-repeat`).
-	FORE_IMAGE_AREA = 0x50,
+		/// Relative to content origin - location of foreground image (if it set `no-repeat`).
+		const FORE_IMAGE_AREA = 0x50;
 
-	/// Scroll_area - scrollable area in content box.
-	SCROLLABLE_AREA = 0x60,
+		/// Scroll_area - scrollable area in content box.
+		const SCROLLABLE_AREA = 0x60;
+	}
 }
 
 impl ELEMENT_AREAS {
 	/// Size of content (i.e `(0, 0, width, height)`).
-	pub fn self_content() -> u32 {
-		ELEMENT_AREAS::SELF_RELATIVE as u32
+	pub fn self_content() -> Self {
+		ELEMENT_AREAS::SELF_RELATIVE
 	}
 
 	/// Size of rect (i.e `(left, top, width, height)`)
-	pub fn self_rect() -> u32 {
-		ELEMENT_AREAS::ROOT_RELATIVE as u32
+	pub fn self_rect() -> Self {
+		ELEMENT_AREAS::ROOT_RELATIVE
 	}
 }
 

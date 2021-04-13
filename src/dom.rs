@@ -525,10 +525,10 @@ impl Element {
 		ok_or!((), ok)
 	}
 
-	/// Get bounding rectangle of the element. See the [`ELEMENT_AREAS`](enum.ELEMENT_AREAS.html) enum for `kind` flags.
-	pub fn get_location(&self, kind: u32) -> Result<RECT> {
+	/// Get bounding rectangle of the element.
+	pub fn get_location(&self, kind: ELEMENT_AREAS) -> Result<RECT> {
 		let mut rc = RECT::default();
-		let ok = (_API.SciterGetElementLocation)(self.he, &mut rc as *mut _, kind as u32);
+		let ok = (_API.SciterGetElementLocation)(self.he, &mut rc as *mut _, kind.bits());
 		ok_or!(rc, ok)
 	}
 

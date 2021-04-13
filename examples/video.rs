@@ -131,7 +131,7 @@ impl sciter::EventHandler for VideoGen {
 
         let source = Element::from(source);
 	      use sciter::dom::ELEMENT_AREAS;
-		    let flags = ELEMENT_AREAS::CONTENT_BOX as u32 | ELEMENT_AREAS::SELF_RELATIVE as u32;
+		    let flags = ELEMENT_AREAS::CONTENT_BOX | ELEMENT_AREAS::SELF_RELATIVE;
 		    let rc = source.get_location(flags).unwrap();
 	      println!("[video] start video thread on <{}> which is about {:?} pixels", source, rc.size());
       }
