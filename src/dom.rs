@@ -501,9 +501,8 @@ impl Element {
 	}
 
 	/// Set UI state of the element with optional view update.
-	pub fn set_state(&mut self, set: ELEMENT_STATE_BITS, clear: Option<ELEMENT_STATE_BITS>, update: bool) -> Result<()> {
-		let clear = clear.unwrap_or(ELEMENT_STATE_BITS::STATE_NONE);
-		let ok = (_API.SciterSetElementState)(self.he, set as UINT, clear as UINT, update as BOOL);
+	pub fn set_state(&mut self, set: ELEMENT_STATE_BITS, clear: ELEMENT_STATE_BITS, update: bool) -> Result<()> {
+		let ok = (_API.SciterSetElementState)(self.he, set.bits(), clear.bits(), update as BOOL);
 		ok_or!((), ok)
 	}
 
@@ -1166,8 +1165,6 @@ impl ::std::fmt::Display for Element {
 impl ::std::fmt::Debug for Element {
 	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
 		if f.alternate() {
-			use ::std::mem;
-
 			fn state_name(value: &ELEMENT_STATE_BITS) -> &'static str {
 				match *value {
 					ELEMENT_STATE_BITS::STATE_LINK => "link",
@@ -1203,18 +1200,18 @@ impl ::std::fmt::Debug for Element {
 					ELEMENT_STATE_BITS::STATE_READY => "",
 					ELEMENT_STATE_BITS::STATE_PRESSED => "pressed",
 
-					ELEMENT_STATE_BITS::STATE_NONE => "",
+					_ => unreachable!(),
 				}
 			}
 
 			// "tag#id.class:state1:state2..."
-			let state = self.get_state() as u32;
+			let state = self.get_state().bits();
 
 			write!(f, "{{{}", self)?;
 			for i in 0..31 {
 				let bit = state & (1 << i);
 				if bit != 0 {
-					let state_bit: ELEMENT_STATE_BITS = unsafe { mem::transmute(bit) };
+					let state_bit = ELEMENT_STATE_BITS::from_bits(bit).unwrap();
 					let name = state_name(&state_bit);
 					if !name.is_empty() {
 						write!(f, ":{}", name)?;
