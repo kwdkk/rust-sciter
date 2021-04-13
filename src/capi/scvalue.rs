@@ -9,7 +9,7 @@ use capi::sctypes::*;
 ///
 /// An opaque union that can hold different types of values: numbers, strings, arrays, objects, etc.
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct VALUE
 {
 	/// Value type.

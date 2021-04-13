@@ -51,7 +51,7 @@ pub type PBOOL = *mut BOOL;
 
 /// Defines the coordinates of the upper-left and lower-right corners of a rectangle.
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[derive(Default, Debug)]
 pub struct RECT {
     pub left: LONG,

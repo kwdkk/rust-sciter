@@ -1845,7 +1845,7 @@ This way you can establish interaction between scipt and native code inside your
 	}
 
 	/// UI action causing change.
-	#[derive(Debug)]
+	#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 	pub enum EventReason {
 		/// General event source triggers (by mouse, key or synthesized).
 		General(CLICK_REASON),

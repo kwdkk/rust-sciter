@@ -10,6 +10,8 @@ use capi::scgraphics::{HGFX};
 use capi::scom::{som_asset_t, som_passport_t};
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+#[derive(Debug)]
 pub struct BEHAVIOR_EVENT_PARAMS
 {
 	/// Behavior event code. See [`BEHAVIOR_EVENTS`](enum.BEHAVIOR_EVENTS.html).
@@ -35,7 +37,7 @@ pub struct BEHAVIOR_EVENT_PARAMS
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 pub enum INITIALIZATION_EVENTS
 {
 	BEHAVIOR_DETACH = 0,
@@ -43,6 +45,8 @@ pub enum INITIALIZATION_EVENTS
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct INITIALIZATION_PARAMS
 {
 	pub cmd: INITIALIZATION_EVENTS,
@@ -50,7 +54,7 @@ pub struct INITIALIZATION_PARAMS
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 pub enum SOM_EVENTS
 {
 	SOM_GET_PASSPORT = 0,
@@ -58,6 +62,7 @@ pub enum SOM_EVENTS
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub union SOM_PARAMS_DATA
 {
 	pub asset: *const som_asset_t,
@@ -65,6 +70,7 @@ pub union SOM_PARAMS_DATA
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub struct SOM_PARAMS
 {
 	pub cmd: SOM_EVENTS,
@@ -97,24 +103,28 @@ pub enum BEHAVIOR_METHOD_IDENTIFIERS {
 
 /// Method arguments used in `SciterCallBehaviorMethod()` or `HANDLE_METHOD_CALL`.
 #[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct METHOD_PARAMS {
   /// [`BEHAVIOR_METHOD_IDENTIFIERS`](enum.BEHAVIOR_METHOD_IDENTIFIERS.html) or user identifiers.
   pub method: UINT,
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct IS_EMPTY_PARAMS {
   pub method: UINT,
   pub is_empty: UINT,
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct VALUE_PARAMS {
   pub method: UINT,
   pub value: VALUE,
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct SCRIPTING_METHOD_PARAMS
 {
 	pub name: LPCSTR,
@@ -124,12 +134,14 @@ pub struct SCRIPTING_METHOD_PARAMS
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct TIMER_PARAMS
 {
 	pub timerId: UINT_PTR,
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct DRAW_PARAMS {
 	/// Element layer to draw.
 	pub layer: DRAW_EVENTS,
@@ -147,7 +159,7 @@ pub struct DRAW_PARAMS {
 /// Layer to draw.
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DRAW_EVENTS {
 	DRAW_BACKGROUND = 0,
 	DRAW_CONTENT,
@@ -209,7 +221,7 @@ pub const EVENT_GROUPS_SUBSCRIPTIONS_REQUEST: u32 = u32::MAX;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Event propagation schema.
 pub enum PHASE_MASK
 {
@@ -225,7 +237,7 @@ pub enum PHASE_MASK
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Mouse buttons.
 pub enum MOUSE_BUTTONS
 {
@@ -259,7 +271,7 @@ impl std::convert::From<u32> for KEYBOARD_STATES {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Keyboard input events.
 pub enum KEY_EVENTS
 {
@@ -270,7 +282,7 @@ pub enum KEY_EVENTS
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Mouse events.
 pub enum MOUSE_EVENTS
 {
@@ -308,7 +320,7 @@ pub enum MOUSE_EVENTS
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 #[allow(missing_docs)]
 /// General event source triggers
 pub enum CLICK_REASON
@@ -325,7 +337,7 @@ pub enum CLICK_REASON
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Edit control change trigger.
 pub enum EDIT_CHANGED_REASON
 {
@@ -348,7 +360,7 @@ pub enum EDIT_CHANGED_REASON
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 /// Behavior event codes.
 pub enum BEHAVIOR_EVENTS
 {
