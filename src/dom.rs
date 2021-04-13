@@ -59,7 +59,10 @@ You can change the **text** or **html** of a DOM element:
 # let root = sciter::dom::Element::from(::std::ptr::null_mut());
 if let Some(mut el) = root.find_first("#cancel").unwrap() {
   el.set_text("Abort!");
-  el.set_html(br##"<img src="http://lorempixel.com/32/32/cats/" alt="some cat"/>"##, None);
+  el.set_html(
+    br##"<img src="http://lorempixel.com/32/32/cats/" alt="some cat"/>"##,
+    sciter::dom::SET_ELEMENT_HTML::SIH_REPLACE_CONTENT,
+  );
 }
 ```
 
@@ -471,11 +474,11 @@ impl Element {
 	}
 
 	/// Set inner or outer html of the element.
-	pub fn set_html(&self, html: &[u8], how: Option<SET_ELEMENT_HTML>) -> Result<()> {
+	pub fn set_html(&self, html: &[u8], how: SET_ELEMENT_HTML) -> Result<()> {
 		if html.is_empty() {
 			return self.clear();
 		}
-		let ok = (_API.SciterSetElementHtml)(self.he, html.as_ptr(), html.len() as UINT, how.unwrap_or(SET_ELEMENT_HTML::SIH_REPLACE_CONTENT) as UINT);
+		let ok = (_API.SciterSetElementHtml)(self.he, html.as_ptr(), html.len() as UINT, how as UINT);
 		ok_or!((), ok)
 	}
 
@@ -558,11 +561,11 @@ impl Element {
 	///
 	/// GET params (if any) are appended to the url to form the request.<br/>
 	/// HTTP POST params are serialized as `Content-Type: application/x-www-form-urlencoded;charset=utf-8;`.
-	pub fn send_request(&self, url: &str, params: Option<&[(&str, &str)]>, method: Option<REQUEST_TYPE>, data_type: Option<RESOURCE_TYPE>) -> Result<()> {
+	pub fn send_request(&self, url: &str, params: Option<&[(&str, &str)]>, method: REQUEST_TYPE, data_type: RESOURCE_TYPE) -> Result<()> {
 
 		let url = s2w!(url);
-		let method = method.unwrap_or(REQUEST_TYPE::AsyncGet) as u32;
-		let data_type = data_type.unwrap_or(RESOURCE_TYPE::HTML) as u32;
+		let method = method as u32;
+		let data_type = data_type as u32;
 
 		type WSTR = Vec<u16>;
 
