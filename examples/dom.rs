@@ -70,7 +70,7 @@ impl sciter::EventHandler for DocumentHandler {
 			assert_eq!(value.as_string().unwrap(), text);
 		}
 
-		if let Some(mut h1) = body.first_child() {
+		if let Some(h1) = body.first_child() {
 			println!("changing h1 attributes");
 			h1.set_style_attribute("color", "green");
 			h1.set_style_attribute("outline", "1px solid orange");
@@ -84,8 +84,8 @@ impl sciter::EventHandler for DocumentHandler {
 			all.len();
 		}
 
-		if let Ok(Some(mut body)) = root.find_first("html > body") {
-			let mut div = Element::with_parent("div", &mut body).unwrap();
+		if let Ok(Some(body)) = root.find_first("html > body") {
+			let div = Element::with_parent("div", &body).unwrap();
 			div.set_attribute("id", "requests");
 			div.set_style_attribute("outline", "1px solid orange");
 			div.set_style_attribute("margin", "10dip 0");
@@ -112,22 +112,22 @@ impl sciter::EventHandler for DocumentHandler {
 			// d.send_request("http://httpbin.org/html", Some(&params), Some(method), Some(data_type)).expect("can't send an http request");
 		}
 
-		if let Ok(Some(mut body)) = root.find_first("html > body") {
+		if let Ok(Some(body)) = root.find_first("html > body") {
 
 			println!("creating some elments");
 
 			// DOM manipulation.
 			// After creating the new Element, we can set only attributes for it until we'll attach it to the DOM.
 			//
-			let mut div = Element::with_parent("div", &mut body).unwrap();
+			let div = Element::with_parent("div", &body).unwrap();
 			div.set_style_attribute("outline", "1px solid orange");
 			div.set_style_attribute("width", "max-content");
 			div.set_style_attribute("padding", "5dip");
 
-			let mut lb = Element::with_text("label", "Output: ").unwrap();
+			let lb = Element::with_text("label", "Output: ").unwrap();
 			div.append(&lb).expect("wtf?");	// push as reference, we can access this `lb` still.
 
-			let mut date = Element::with_type("input", "date").unwrap();
+			let date = Element::with_type("input", "date").unwrap();
 			date.set_attribute("id", "mydate");
 			date.set_attribute("value", "now");
 
@@ -142,7 +142,7 @@ impl sciter::EventHandler for DocumentHandler {
 			lb.set_style_attribute("color", "lightblue");
 			lb.set_style_attribute("vertical-align", "middle");
 
-			let mut progress = Element::create("progress").unwrap();
+			let progress = Element::create("progress").unwrap();
 			progress.set_attribute("max", "100");
 			progress.set_attribute("id", "id1");
 			progress.set_attribute("title", "Click to start timer.");
@@ -159,7 +159,7 @@ impl sciter::EventHandler for DocumentHandler {
 			let handler = ProgressHandler::default();
 			progress.attach_handler(handler).expect("can't attach?");
 
-			let mut e = Element::with_text("span", " <-- check tooltip").unwrap();
+			let e = Element::with_text("span", " <-- check tooltip").unwrap();
 			div.append(&e);
 
 			e.set_style_attribute("font-style", "italic");
@@ -203,7 +203,7 @@ impl sciter::EventHandler for ProgressHandler {
 			BEHAVIOR_EVENTS::BUTTON_CLICK => {
 
 				let source = Element::from(source);
-				let mut target = Element::from(target);
+				let target = Element::from(target);
 
 				println!("button click on target {}", target);
 

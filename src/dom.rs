@@ -317,7 +317,7 @@ impl Element {
 	}
 
 	/// Create new element as child of `parent`.
-	pub fn with_parent(tag: &str, parent: &mut Element) -> Result<Element> {
+	pub fn with_parent(tag: &str, parent: &Element) -> Result<Element> {
 		let mut e = Element { he: HELEMENT!() };
 		let tag = s2u!(tag);
 		let text = 0 as LPCWSTR;
@@ -328,7 +328,7 @@ impl Element {
 
 	/// Create new element as child of `parent`. Deprecated.
 	#[deprecated(since="0.5.0", note="please use `Element::with_parent()` instead.")]
-	pub fn create_at(tag: &str, parent: &mut Element) -> Result<Element> {
+	pub fn create_at(tag: &str, parent: &Element) -> Result<Element> {
 		Element::with_parent(tag, parent)
 	}
 
@@ -457,7 +457,7 @@ impl Element {
 	}
 
 	/// Set inner text of the element.
-	pub fn set_text(&mut self, text: &str) -> Result<()> {
+	pub fn set_text(&self, text: &str) -> Result<()> {
 		let (s,n) = s2wn!(text);
 		let ok = (_API.SciterSetElementText)(self.he, s.as_ptr(), n);
 		ok_or!((), ok)
@@ -471,7 +471,7 @@ impl Element {
 	}
 
 	/// Set inner or outer html of the element.
-	pub fn set_html(&mut self, html: &[u8], how: Option<SET_ELEMENT_HTML>) -> Result<()> {
+	pub fn set_html(&self, html: &[u8], how: Option<SET_ELEMENT_HTML>) -> Result<()> {
 		if html.is_empty() {
 			return self.clear();
 		}
@@ -487,7 +487,7 @@ impl Element {
 	}
 
 	/// Set value of the element.
-	pub fn set_value<T: Into<Value>>(&mut self, val: T) -> Result<()> {
+	pub fn set_value<T: Into<Value>>(&self, val: T) -> Result<()> {
 		let ok = (_API.SciterSetValue)(self.he, val.into().as_cptr());
 		ok_or!((), ok)
 	}
@@ -501,7 +501,7 @@ impl Element {
 	}
 
 	/// Set UI state of the element with optional view update.
-	pub fn set_state(&mut self, set: ELEMENT_STATE_BITS, clear: ELEMENT_STATE_BITS, update: bool) -> Result<()> {
+	pub fn set_state(&self, set: ELEMENT_STATE_BITS, clear: ELEMENT_STATE_BITS, update: bool) -> Result<()> {
 		let ok = (_API.SciterSetElementState)(self.he, set.bits(), clear.bits(), update as BOOL);
 		ok_or!((), ok)
 	}
@@ -514,13 +514,13 @@ impl Element {
 	}
 
 	/// Attach a native window to the element as a child.
-	pub fn attach_hwnd(&mut self, child: HWINDOW) -> Result<()> {
+	pub fn attach_hwnd(&self, child: HWINDOW) -> Result<()> {
 		let ok = (_API.SciterAttachHwndToElement)(self.he, child);
 		ok_or!((), ok)
 	}
 
 	/// Detach a child native window (if any) from the element.
-	pub fn detach_hwnd(&mut self) -> Result<()> {
+	pub fn detach_hwnd(&self) -> Result<()> {
 		let ok = (_API.SciterAttachHwndToElement)(self.he, 0 as HWINDOW);
 		ok_or!((), ok)
 	}
@@ -755,7 +755,7 @@ impl Element {
 	}
 
 	/// Add or replace attribute.
-	pub fn set_attribute(&mut self, name: &str, value: &str) -> Result<()> {
+	pub fn set_attribute(&self, name: &str, value: &str) -> Result<()> {
 		let name = s2u!(name);
 		let value = s2w!(value);
 		let ok = (_API.SciterSetAttributeByName)(self.he, name.as_ptr(), value.as_ptr());
@@ -763,7 +763,7 @@ impl Element {
 	}
 
 	/// Remove attribute.
-	pub fn remove_attribute(&mut self, name: &str) -> Result<()> {
+	pub fn remove_attribute(&self, name: &str) -> Result<()> {
 		let name = s2u!(name);
 		let value = ::std::ptr::null();
 		let ok = (_API.SciterSetAttributeByName)(self.he, name.as_ptr(), value);
@@ -771,7 +771,7 @@ impl Element {
 	}
 
 	/// Toggle attribute.
-	pub fn toggle_attribute(&mut self, name: &str, isset: bool, value: Option<&str>) -> Result<()> {
+	pub fn toggle_attribute(&self, name: &str, isset: bool, value: Option<&str>) -> Result<()> {
 		if isset {
 			self.set_attribute(name, value.unwrap())
 		} else {
@@ -780,7 +780,7 @@ impl Element {
 	}
 
 	/// Remove all attributes from the element.
-	pub fn clear_attributes(&mut self) -> Result<()> {
+	pub fn clear_attributes(&self) -> Result<()> {
 		let ok = (_API.SciterClearAttributes)(self.he);
 		ok_or!((), ok)
 	}
@@ -797,7 +797,7 @@ impl Element {
 	}
 
 	/// Set [style attribute](https://sciter.com/docs/content/sciter/Style.htm).
-	pub fn set_style_attribute(&mut self, name: &str, value: &str) -> Result<()> {
+	pub fn set_style_attribute(&self, name: &str, value: &str) -> Result<()> {
 		let name = s2u!(name);
 		let value = s2w!(value);
 		let ok = (_API.SciterSetStyleAttribute)(self.he, name.as_ptr(), value.as_ptr());
@@ -938,7 +938,7 @@ impl Element {
 	}
 
 	/// Clear content of the element.
-	pub fn clear(&mut self) -> Result<()> {
+	pub fn clear(&self) -> Result<()> {
 		let ok = (_API.SciterSetElementText)(self.he, ::std::ptr::null(), 0);
 		ok_or!((), ok)
 	}
@@ -958,27 +958,27 @@ impl Element {
 	///
 	/// Note that we cannot follow Rust semantic here
 	/// because the newly created `Element` is unusable before it will be inserted at DOM.
-	pub fn insert(&mut self, index: usize, child: &Element) -> Result<()> {
+	pub fn insert(&self, index: usize, child: &Element) -> Result<()> {
 		let ok = (_API.SciterInsertElement)(child.he, self.he, index as UINT);
 		ok_or!((), ok)
 	}
 
 	/// Append element as last child of this element.
-	pub fn append(&mut self, child: &Element) -> Result<()> {
+	pub fn append(&self, child: &Element) -> Result<()> {
 		self.insert(0x7FFF_FFFF, child)
 	}
 
 	/// Append element as last child of this element.
 	#[allow(clippy::needless_pass_by_value)]
-	pub fn push(&mut self, element: Element) {
+	pub fn push(&self, element: Element) {
 		self.append(&element).expect("Could not append element.");
 	}
 
 	/// Remove the last child from this element and returns it, or `None` if this element is empty.
-	pub fn pop(&mut self) -> Option<Element> {
+	pub fn pop(&self) -> Option<Element> {
 		let count = self.len();
 		if count > 0 {
-			if let Some(mut child) = self.get(count - 1) {
+			if let Some(child) = self.get(count - 1) {
 				child.detach().expect("Could not detach element.");
 				return Some(child);
 			}
@@ -987,21 +987,19 @@ impl Element {
 	}
 
 	/// Take element out of its container (and DOM tree).
-	pub fn detach(&mut self) -> Result<()> {
+	pub fn detach(&self) -> Result<()> {
 		let ok = (_API.SciterDetachElement)(self.he);
 		ok_or!((), ok)
 	}
 
 	/// Take element out of its container (and DOM tree) and force destruction of all behaviors.
-	pub fn destroy(&mut self) -> Result<()> {
-		let mut p = HELEMENT!();
-		::std::mem::swap(&mut self.he, &mut p);
-		let ok = (_API.SciterDeleteElement)(p);
+	pub fn destroy(&self) -> Result<()> {
+		let ok = (_API.SciterDeleteElement)(self.he);
 		ok_or!((), ok)
 	}
 
 	/// Swap element positions.
-	pub fn swap(&mut self, other: &mut Element) -> Result<()> {
+	pub fn swap(&self, other: &Element) -> Result<()> {
 		let ok = (_API.SciterSwapElements)(self.he, other.he);
 		ok_or!((), ok)
 	}
@@ -1101,7 +1099,7 @@ impl Element {
 	}
 
 	/// Attach the native event handler to this element.
-	pub fn attach_handler<Handler: EventHandler>(&mut self, handler: Handler) -> Result<u64> {
+	pub fn attach_handler<Handler: EventHandler>(&self, handler: Handler) -> Result<u64> {
 		// make native handler
 		let boxed = Box::new(handler);
 		let ptr = Box::into_raw(boxed);	// dropped in `_event_handler_proc`
@@ -1111,7 +1109,7 @@ impl Element {
 	}
 
 	/// Detach your handler from the element. Handlers identified by `token` from `attach_handler()` result.
-	pub fn detach_handler<Handler: EventHandler>(&mut self, token: u64) -> Result<()> {
+	pub fn detach_handler<Handler: EventHandler>(&self, token: u64) -> Result<()> {
 		let ptr = token as usize as *mut Handler;
 		let ok = (_API.SciterDetachEventHandler)(self.he, ::eventhandler::_event_handler_proc::<Handler>, ptr as LPVOID);
 		ok_or!((), ok)
@@ -1430,7 +1428,7 @@ impl Node {
 	}
 
 	/// Set inner text of the node.
-	pub fn set_text(&mut self, text: &str) -> Result<()> {
+	pub fn set_text(&self, text: &str) -> Result<()> {
 		let (s,n) = s2wn!(text);
 		let ok = (_API.SciterNodeSetText)(self.hn, s.as_ptr(), n);
 		ok_or!((), ok)
@@ -1535,39 +1533,37 @@ impl Node {
 		self.len() == 0
 	}
 
-	pub fn insert_before_self(&mut self, child: &Node) -> Result<()> {
+	pub fn insert_before_self(&self, child: &Node) -> Result<()> {
 		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_BEFORE, child.hn);
 		ok_or!((), ok)
 	}
 
-	pub fn insert_after_self(&mut self, child: &Node) -> Result<()> {
+	pub fn insert_after_self(&self, child: &Node) -> Result<()> {
 		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_AFTER, child.hn);
 		ok_or!((), ok)
 	}
 
 	/// Append element as last child of this element.
-	pub fn append(&mut self, child: &Node) -> Result<()> {
+	pub fn append(&self, child: &Node) -> Result<()> {
 		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_APPEND, child.hn);
 		ok_or!((), ok)
 	}
 
 	/// Prepend element as first child of this element.
-	pub fn prepend(&mut self, child: &Node) -> Result<()> {
+	pub fn prepend(&self, child: &Node) -> Result<()> {
 		let ok = (_API.SciterNodeInsert)(self.hn, NODE_INS_TARGET::NIT_PREPEND, child.hn);
 		ok_or!((), ok)
 	}
 
 	/// Take node out of its container (and DOM tree).
-	pub fn detach(&mut self) -> Result<()> {
+	pub fn detach(&self) -> Result<()> {
 		let ok = (_API.SciterNodeRemove)(self.hn, 0);
 		ok_or!((), ok)
 	}
 
 	/// Take node out of its container (and DOM tree) and force destruction of all behaviors.
-	pub fn destroy(&mut self) -> Result<()> {
-		let mut p = HNODE!();
-		::std::mem::swap(&mut self.hn, &mut p);
-		let ok = (_API.SciterNodeRemove)(p, 1);
+	pub fn destroy(&self) -> Result<()> {
+		let ok = (_API.SciterNodeRemove)(self.hn, 1);
 		ok_or!((), ok)
 	}
 }
