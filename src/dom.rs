@@ -467,10 +467,11 @@ impl Element {
 	}
 
 	/// Get html representation of the element as utf-8 bytes.
-	pub fn get_html(&self, with_outer_html: bool) -> Vec<u8> {
+	pub fn get_html(&self, with_outer_html: bool) -> String {
 		let mut s = Vec::new();
 		(_API.SciterGetElementHtmlCB)(self.he, with_outer_html as BOOL, store_bstr, &mut s as *mut Vec<u8> as LPVOID);
-		return s;
+		// Safety: The document says it's "UTF8 encoded HTML", so this is totally safe.
+		unsafe { String::from_utf8_unchecked(s) }
 	}
 
 	/// Set inner or outer html of the element.

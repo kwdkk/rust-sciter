@@ -63,7 +63,7 @@ impl sciter::EventHandler for DocumentHandler {
 			assert_eq!(text, "Herman Melville - Moby-Dick");
 
 			let html = h1.get_html(true);
-			assert_eq!(html.as_slice(), br"<h1>Herman Melville - Moby-Dick</h1>".as_ref());
+			assert_eq!(html, r"<h1>Herman Melville - Moby-Dick</h1>");
 
 			let value = h1.get_value();
 			assert!(value.is_string());
