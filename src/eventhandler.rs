@@ -295,6 +295,11 @@ fn process_events(me: &mut dyn EventHandler, he: HELEMENT, evtg: UINT, params: L
 				handled
 			},
 
+			EVENT_GROUPS::HANDLE_SIZE => {
+				me.on_size(he);
+				false
+			},
+
 			// unknown `EVENT_GROUPS` notification
 			_ => {
 				eprintln!("[sciter] warning! unknown event group {:04X}", evtg.bits());
